@@ -1,6 +1,16 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import React from "react";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+  } from "@/components/ui/dialog"
+import ProductDetails from "./ProductDetails";
+  
 
 const Product = ({ productDetails }) => {
   return (
@@ -23,15 +33,35 @@ const Product = ({ productDetails }) => {
             " line-through text-gray-600"
           }`}
         >
-          $
+          ₦
           {productDetails?.attributes?.newPrice &&
             productDetails?.attributes?.oldPrice}
         </h2>
-        <h2>${productDetails?.attributes?.newPrice}</h2>
+        <h2>₦{productDetails?.attributes?.newPrice}</h2>
        
       </div>
 
-      <Button className="hover:bg-rgba-fb8e00">Add to cart</Button>
+      <Dialog>
+  <DialogTrigger>
+    <div>
+  <Button className="hover:bg-rgba-fb8e00">Add to cart</Button>
+
+    </div>
+
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+   
+      <DialogDescription>
+        <div>
+      <ProductDetails productDetails={productDetails} />
+
+        </div>
+      </DialogDescription>
+    </DialogHeader>
+  </DialogContent>
+</Dialog>
+
     </div>
   );
 };
