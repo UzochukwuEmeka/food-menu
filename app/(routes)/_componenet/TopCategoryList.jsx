@@ -1,16 +1,19 @@
+import React from 'react'
+import Product from '@/app/_components/Product'
+import Link from 'next/link'
 import Image from "next/image";
-import React from "react";
-import Link from 'next/link';
-const CategoryList = ({ categoryList }) => {
-  return (
-    <div className=" py-9">
-      <h3 className="text-[#fb8e00] font-bold text-2xl">Shop by Category</h3>
 
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-5 mt-2 ">
-        {categoryList.map((items, index) => {
+
+const TopCategoryList = ({list}) => {
+  return (
+    <div className='my-4 p-4'>
+      
+      <div className="flex justify-center gap-5 mt-2 items-center
+      ">
+        {list.map((items, index) => {
         return  <Link href={`/product-category/${items.attributes.name}`}
             key={index}
-            className="group flex gap-2 p-4 rounded-lg  flex-col items-center bg-rgba-fb8e00  cursor-pointer hover:bg-rgba-light"
+            className="group flex gap-2 p-4 rounded-lg  flex-col items-center bg-rgba-fb8e00  cursor-pointer hover:bg-rgba-light w-[150px]"
           >
             <Image
           src={
@@ -31,7 +34,7 @@ const CategoryList = ({ categoryList }) => {
         })}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default CategoryList;
+export default TopCategoryList
