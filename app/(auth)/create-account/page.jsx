@@ -5,16 +5,19 @@ import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { useRouter } from "next/navigation";
 import  {LoaderIcon} from 'lucide-react'
+import { UpdateHeader } from "@/app/_context/UpdateHeader";
 
 const CreateAccount = () => {
   const [username, setUsername] = useState();
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
   const [loading, setLoading] = useState(false);
+  const { updateCart, setUpdateCart } = useContext(UpdateHeader);
+
 
   const router = useRouter();
   useEffect(() => {
@@ -36,6 +39,7 @@ const CreateAccount = () => {
         setPassword("");
         setEmail("");
         setUsername(" ");
+        setUpdateCart(!updateCart)
         router.push("/");
         setLoading(false);
       })

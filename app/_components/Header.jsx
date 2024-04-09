@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Image from "next/image";
 import {
   LayoutGrid,
@@ -8,6 +8,7 @@ import {
   ShoppingBag,
   ShoppingBasket,
   CircleUserRound,
+  LoaderIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,21 +19,72 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import CartItemList from "./CartItemList";
+
 import GlobalApi from "../_utils/GlobalApi";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
+import { UpdateHeader } from "../_context/UpdateHeader";
+import { toast } from "sonner";
 
 const Header = () => {
   const [category, setCategory] = useState([]);
-  const [isLogin, setIsLogin] = useState(
-    sessionStorage.getItem("jwt") ? true : false
-  );
+  const isLogin =
+    typeof window !== "undefined" && sessionStorage.getItem("jwt")
+      ? true
+      : false;
+
+  const [cartAmount, setCartAmount] = useState();
+  const [loading, setLoading] = useState(false);
+
+  const { updateCart, setUpdateCart } = useContext(UpdateHeader);
+  const [cartItemList, setCartItemList] = useState([]);
+
+  const user = isLogin && JSON.parse(sessionStorage.getItem("user"));
+  const jwt = isLogin && sessionStorage.getItem("jwt");
+  const [subtotal, setSubTotal] = useState(0);
+  useEffect(() => {
+    let total = 0;
+    cartItemList.forEach((purchase) => {
+      total = total + purchase.attributes.products.data[0].attributes?.newPrice;
+    });
+    setSubTotal(total);
+  }, [cartItemList]);
 
   useEffect(() => {
     getCategoryList();
   }, []);
 
+  useEffect(() => {
+    if (isLogin) {
+      amountOfItems();
+    } else {
+      return;
+    }
+  }, [updateCart]);
+
+  const amountOfItems = () => {
+    setLoading(true);
+
+    GlobalApi.userCart(user.id, jwt).then((resp) => {
+      console.log(resp.data);
+      const itemList = resp.data.data;
+      setCartItemList(itemList);
+      setCartAmount(itemList.length);
+      setLoading(false);
+    });
+  };
+  console.log(cartItemList);
   const params = usePathname();
   const isInAuthPage =
     params === "/login" || params == "/create-account" ? true : false;
@@ -45,20 +97,29 @@ const Header = () => {
 
   const router = useRouter();
   const Logout = () => {
-    sessionStorage.clear("jwt");
-    setIsLogin(false);
+    sessionStorage.clear();
     router.push("/login");
   };
 
+  const deleteItem = (id) => {
+    GlobalApi.deleteItem(id, jwt).then((resp) => {
+      toast("Item removed!");
+      amountOfItems();
+    });
+  };
   return (
     <div className="flex items-center   p-2 shadow-md justify-between  ">
       {isInAuthPage ? (
-        <Image src={"/logo.jpg"} width={100} height={100} alt="logo" />
+        <Link href={"/"}>
+          <Image src={"/logo.jpg"} width={100} height={100} alt="logo" />
+        </Link>
       ) : (
         <>
           <div className="flex items-center gap-8 ">
             <div className="flex items-center cursor-pointer  ">
-              <Image src={"/logo.jpg"} width={100} height={100} alt="logo" />
+              <Link href={"/"}>
+                <Image src={"/logo.jpg"} width={100} height={100} alt="logo" />
+              </Link>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <div>
@@ -105,9 +166,50 @@ const Header = () => {
             </div>
           </div>
           <div className="flex  gap-5 items-center">
-            <h2 className="flex gap-2 items-center text-lg ">
-              <ShoppingBasket /> <span>0</span>
-            </h2>
+            <Sheet>
+              <SheetTrigger>
+                {" "}
+                <h2 className="flex gap-2 items-center text-lg ">
+                  <ShoppingBasket />{" "}
+                  <span className="text-[#fb8e00] font-bold ">
+                    {" "}
+                    {loading ? (
+                      <LoaderIcon className="animate-spin" />
+                    ) : (
+                      cartAmount
+                    )}
+                  </span>
+                </h2>
+              </SheetTrigger>
+              <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle className="bg-primary text-white p-2 font-bold text-lg">
+                    My Cart{" "}
+                  </SheetTitle>
+                  <SheetDescription>
+                    <CartItemList
+                      cartItemList={cartItemList}
+                      deleteItem={deleteItem}
+                    />
+                  </SheetDescription>
+                </SheetHeader>
+                <SheetClose asChild>
+                  <div className=" w-[90%]  flex flex-col">
+                    <h2 className="text-lg my-5 font-bold flex justify-between ">
+                      SubTotal: <span>₦ {subtotal}</span>
+                    </h2>
+                    <Button
+                      onClick={() =>
+                        router.push(jwt ? "/checkout" : "/create-account")
+                      }
+                    >
+                      CheckOut
+                    </Button>
+                  </div>
+                </SheetClose>
+              </SheetContent>
+            </Sheet>
+
             {!isLogin ? (
               <Link href={"/login"}>
                 <Button>Login</Button>
@@ -121,7 +223,9 @@ const Header = () => {
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>Profile</DropdownMenuItem>
-                  <DropdownMenuItem>My Order</DropdownMenuItem>
+                  <Link href={"/orderhistory"}>
+                    <DropdownMenuItem>My Order</DropdownMenuItem>
+                  </Link>
                   <DropdownMenuItem onClick={() => Logout()}>
                     Logout
                   </DropdownMenuItem>

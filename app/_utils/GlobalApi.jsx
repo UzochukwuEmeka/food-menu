@@ -17,14 +17,12 @@ const getCategoryList = () =>
   });
 const getProductList = () =>
   axiosClient.get("/products?populate=*").then((resp) => {
-    console.log(resp.data.data);
     return resp.data.data;
   });
 const getProductByCategory = (categoryName) =>
   axiosClient
     .get(`products?filters[categories][name][$in]=${categoryName}&populate=*`)
     .then((resp) => {
-      console.log(resp.data.data);
       return resp.data.data;
     });
 
@@ -44,9 +42,50 @@ const signIn = (email, password) =>
 const addTOCart = (data, jwt) =>
   axiosClient.post("/user-carts", data, {
     headers: {
-      Authorization: "Bearer " +jwt,
+      Authorization: "Bearer " + jwt,
     },
   });
+
+const userCart = (userId, jwt) =>
+  axiosClient.get(
+    `/user-carts?filters[userId][$eq]=${userId}&[populate][products][populate][image]=url`,
+    {
+      headers: {
+        Authorization: "Bearer " + jwt,
+      },
+    }
+  );
+const deleteItem = (userId, jwt) =>
+  axiosClient.delete(`/user-carts/${userId}`, {
+    headers: {
+      Authorization: "Bearer " + jwt,
+    },
+  });
+
+const createOrder = (data, jwt) =>
+  axiosClient.post("/orders", data, {
+    headers: {
+      Authorization: "Bearer " + jwt,
+    },
+  });
+
+const orderItemList = (userId, jwt) =>
+  axiosClient
+    .get(
+      `/orders?filters[userId][$eq]=${userId}&[populate][orderitemlist][populate][product][populate][images]=url`
+    )
+    .then((resp) => {
+      const response = resp.data.data;
+      const orderList = response.map((item) => ({
+        id: item.id,
+        totalOrderAmount: item?.attributes?.totalOrderAmount,
+        paymentId: item?.attributes?.paymentId,
+        orderItemList: item?.attributes?.orderitemlist,
+        createdAt: item?.attributes?.createdAt,
+        status:item?.attributes.status
+      }));
+      return orderList;
+    });
 export default {
   getCategory,
   getBanners,
@@ -56,4 +95,8 @@ export default {
   registerUsers,
   signIn,
   addTOCart,
+  userCart,
+  deleteItem,
+  createOrder,
+  orderItemList,
 };

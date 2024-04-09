@@ -1,13 +1,12 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { ShoppingBasket,LoaderIcon } from "lucide-react";
+import { ShoppingBasket, LoaderIcon } from "lucide-react";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useState,useContext } from "react";
 import { useRouter } from "next/navigation";
 import GlobalApi from "../_utils/GlobalApi";
 import { toast } from "sonner";
-
-
+import { UpdateHeader } from "../_context/UpdateHeader";
 
 const ProductDetails = ({ productDetails }) => {
   const [totalPrice, setTotalPrice] = useState(
@@ -17,6 +16,7 @@ const ProductDetails = ({ productDetails }) => {
   );
   const [totalItem, setTotalItem] = useState(1);
   const [loading, setLoading] = useState(false);
+  const {updateCart, setUpdateCart}=useContext(UpdateHeader)
 
   const jwt = sessionStorage.getItem("jwt");
   const user = JSON.parse(sessionStorage.getItem("user"));
@@ -34,18 +34,19 @@ const ProductDetails = ({ productDetails }) => {
         amount: (totalItem * totalPrice).toFixed(2),
         products: productDetails.id,
         users_permissions_users: user.id,
+        userId: user.id,
       },
     };
     GlobalApi.addTOCart(data, jwt)
       .then((res) => {
         console.log(data);
         toast("Added to Cart");
+        setUpdateCart(!updateCart)
         setLoading(false);
       })
       .catch((error) => {
         toast.error(error?.response?.data?.error?.message);
         setLoading(false);
-
       });
   };
   return (
@@ -98,9 +99,8 @@ const ProductDetails = ({ productDetails }) => {
         </div>
 
         <Button className="flex gap-3 my-3" onClick={() => addToCart()}>
-          {loading ? <LoaderIcon className="animate-spin" /> : 'Add TO Cart'}
+          {loading ? <LoaderIcon className="animate-spin" /> : "Add TO Cart"}
           <ShoppingBasket />
-          
         </Button>
 
         <div>

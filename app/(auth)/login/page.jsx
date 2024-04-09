@@ -4,8 +4,9 @@ import Link from "next/link";
 import { LoaderIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import { UpdateHeader } from "@/app/_context/UpdateHeader";
 
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -13,6 +14,8 @@ const Login = () => {
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
   const [loading, setLoading] = useState(false);
+  const { updateCart, setUpdateCart } = useContext(UpdateHeader);
+
 
   const route = useRouter();
 
@@ -30,6 +33,7 @@ const Login = () => {
         sessionStorage.setItem("user", JSON.stringify(resp.data.user));
         setPassword("");
         setEmail("");
+        setUpdateCart(!updateCart)
         toast("Login Successful");
         route.replace("/");
         // window.location.reload();
